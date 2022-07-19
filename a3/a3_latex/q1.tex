@@ -1,0 +1,82 @@
+\titledquestion{Machine Learning \& Neural Networks}[8] 
+\begin{parts}
+
+    \part[4] Adam Optimizer\newline
+        Recall the standard Stochastic Gradient Descent update rule:
+        \alns{
+            	\btheta &\gets \btheta - \alpha \nabla_{\btheta} J_{\text{minibatch}}(\btheta)
+        }
+        where $\btheta$ is a vector containing all of the model parameters, $J$ is the loss function, $\nabla_{\btheta} J_{\text{minibatch}}(\btheta)$ is the gradient of the loss function with respect to the parameters on a minibatch of data, and $\alpha$ is the learning rate.
+        Adam Optimization\footnote{Kingma and Ba, 2015, \url{https://arxiv.org/pdf/1412.6980.pdf}} uses a more sophisticated update rule with two additional steps.\footnote{The actual Adam update uses a few additional tricks that are less important, but we won't worry about them here. If you want to learn more about it, you can take a look at: \url{http://cs231n.github.io/neural-networks-3/\#sgd}}
+            
+        \begin{subparts}
+            \subpart[2] First, Adam adopts a commonly used technique called {\it momentum}, which keeps track of $\bm$, a rolling average of the gradients:
+            \alns{
+            	\bm &\gets \beta_1\bm + (1 - \beta_1)\nabla_{\btheta} J_{\text{minibatch}}(\btheta) \\
+            	\btheta &\gets \btheta - \alpha \bm
+            }
+            where $\beta_1$ is a hyperparameter between 0 and 1 (often set to  0.9). Briefly explain in 2-4 sentences (you don't need to prove mathematically, just give an intuition) how using $\bm$ stops the updates from varying as much and why this low variance may be helpful to learning, overall.
+                
+            \ifans{
+           % The method computes individual adaptive learning rates for different parameters from estimates of first and second moments of the gradients; the name Adam is derived from adaptive moment estimation.
+	        The gradient estimated through \textit{momentum} has low variance in comparison with the Vanilla SGD. The reason is that the momentum is effectively an exponential moving average (EMA), which can smooth the noisy series of gradients by exponentially weighting past gradients by right amount of, $\beta_1$, and hence stops the parameter updates varying too much. \\
+	        
+	        Without the \emph{momentum}, $\beta_1=0$, (gradient has large variance), the learning algorithm might bouncing around (zig-zag steps), leading to slow convergence and hence worse performance.     This low variance helps maintain the efficiency of gradient descent, leading to faster convergence.
+            }\newline
+                
+            \subpart[2] Adam extends the idea of {\it momentum} with the technique of {\it adaptive learning rates} by keeping track of  $\bv$, a rolling average of the magnitudes of the gradients:
+            \alns{
+            	\bm &\gets \beta_1\bm + (1 - \beta_1)\nabla_{\btheta} J_{\text{minibatch}}(\btheta) \\
+            	\bv &\gets \beta_2\bv + (1 - \beta_2) (\nabla_{\btheta} J_{\text{minibatch}}(\btheta) \odot \nabla_{\btheta} J_{\text{minibatch}}(\btheta)) \\
+            	\btheta &\gets \btheta - \alpha \bm / \sqrt{\bv}
+            }
+            where $\odot$ and $/$ denote elementwise multiplication and division (so $\bz \odot \bz$ is elementwise squaring) and $\beta_2$ is a hyperparameter between 0 and 1 (often set to  0.99). Since Adam divides the update by $\sqrt{\bv}$, which of the model parameters will get larger updates?  Why might this help with learning?
+            
+            \ifans{
+            Adam also uses the second moment of the gradient to adaptively update the \emph{learning rates}. The parameters with a scarce history of updates will get larger updates as second moment $\sqrt{v}$ normalises (adapts with EMA of gradient magnitudes) the learning rate. This normalisation of updates steps avoid overshooting or monotonically decreasing the learning rate.
+            }\newline
+                
+        \end{subparts}
+        
+        
+    \part[4] 
+        Dropout\footnote{Srivastava et al., 2014, \url{https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf}} is a regularization technique. During training, dropout randomly sets units in the hidden layer $\bh$ to zero with probability $p_{\text{drop}}$ (dropping different units each minibatch), and then multiplies $\bh$ by a constant $\gamma$. We can write this as:
+        \alns{
+        	\bh_{\text{drop}} = \gamma \bd \odot \bh
+        }
+        where $\bd \in \{0, 1\}^{D_h}$ ($D_h$ is the size of $\bh$)
+        is a mask vector where each entry is 0 with probability $p_{\text{drop}}$ and 1 with probability $(1 - p_{\text{drop}})$. $\gamma$ is chosen such that the expected value of $\bh_{\text{drop}}$ is $\bh$:
+        \alns{
+        	\mathbb{E}_{p_{\text{drop}}}[\bh_\text{drop}]_i = h_i \text{\phantom{aaaa}}
+        }
+        for all $i \in \{1,\dots,D_h\}$. 
+        \begin{subparts}
+            \subpart[2]
+            What must $\gamma$ equal in terms of $p_{\text{drop}}$? Briefly justify your answer or show your math derivation using the equations given above.\\
+            \ifans{
+            \begin{equation*}
+			\begin{split}
+            \text{Given,} & \;\; \mathbb{E}_{p_{\text{drop}}}[\bh_\text{drop}]_i = h_i \\
+            & \boxed{ \mathbb{E}[X]=xp(x)} \\
+            \mathbb{E}_{p_{\text{drop}}}[\bh_\text{drop}] & = \sum_i (\bh_{\text{drop}})_i \;\; p \big((\bh_{\text{drop}})_i\big)\\
+            & = \sum_i \gamma \cdot d_i \cdot h_i \cdot \big[ p_{\text{drop}} \; OR \; (1-p_{\text{drop}}) \big]\\
+            & \text{if} \; d_i=0 \; \text{the probability is} \; \big( p_{\text{drop}} \big),\\
+            & \text{if} \; d_i=1 \; \text{the probability is} \; \big(1-p_{\text{drop}}\big),\\  
+            \text{Hence,} \; &= \sum_i \gamma \cdot h_i \cdot (1-p_{\text{drop}})\\
+            & \text{for i\textsuperscript{th} index expectation would be:}\\
+            \mathbb{E}_{p_{\text{drop}}}[\bh_\text{drop}]_i & =  \gamma \cdot h_i \cdot (1-p_{\text{drop}}) \; \text{OR} \; 0\\
+            h_i & =  \gamma \cdot h_i \cdot (1-p_{\text{drop}})\\ 
+            \text{Therefore, } & \boxed{\gamma = \frac{1}{\big( 1-p_{\text{drop}} \big)}}
+           	\end{split}
+           	\end{equation*}         	
+            }\newline
+        
+            \subpart[2] Why should dropout be applied during training? Why should dropout \textbf{NOT} be applied during evaluation? (Hint: it may help to look at the paper linked above in the write-up.) \\
+            \ifans{
+            It is observed that training a network with dropout and using this approximate averaging method at test time leads to significantly lower generalization error on a wide variety of classification problems compared to training with other regularization methods. The reasons are:\\
+            1. \textit{During training}, without dropout, model parameters tend to overfit to some features as the neighbouring parameters can have high reliance on each other. These co-adaptations do not generalise to unseen data. Dropout can randomly cut of connections between parameters (weights) during training by zeroing out gradients. Therefore, dropout can reduce the reliance between parameters, making the trained model more robust and better capable of generalization.\\
+            2. \textit{During evaluation (testing)}, it is not feasible to explicitly average the predictions from exponentially many thinned models. However, a very simple approximate averaging method works well in practice. The idea is to use a single neural net at test time without dropout. The weights of this network are scaled-down versions of the trained weights by probability $p_{\text{drop}}$. By doing this scaling, $2^n$ networks with shared weights can be combined into a single neural network to be used at test time. Therefore dropout should not be applied during evaluation.
+            }\newline
+     
+        \end{subparts}
+\end{parts}
