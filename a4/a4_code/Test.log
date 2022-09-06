@@ -1,0 +1,9 @@
+(torch_gpu38) shrikant@shrikant-HP-SSD:~/nlp/Shrikant/a4$ CUDA_VISIBLE_DEVICES=0 python3 run.py decode model.bin ./chr_en_data/test.chr ./chr_en_data/test.en outputs/test_outputs.txt --cuda
+[nltk_data] Downloading package punkt to /home/rohit123/nltk_data...
+[nltk_data]   Package punkt is already up-to-date!
+load test source sentences from [./chr_en_data/test.chr]
+load test target sentences from [./chr_en_data/test.en]
+load model from model.bin
+Decoding: 100%|█████████████████████████████| 1000/1000 [00:25<00:00, 39.89it/s]
+Corpus BLEU: 12.471787132588677
+

@@ -1,0 +1,334 @@
+\graphicspath{ {images/} }
+
+\titledquestion{Analyzing NMT Systems}[33]
+
+\begin{parts}
+    \part[3] In part 1, we modeled our NMT problem at a subword-level. That is, given a sentence in the source language, we looked up subword components from an embeddings matrix. Alternatively, we could have modeled the NMT problem at the word-level, by looking up whole words from the embeddings matrix. Why might it be important to model our Cherokee-to-English NMT problem at the subword-level vs. the whole word-level? (Hint: Cherokee is a polysynthetic language.)
+	
+	\textcolor{red}{\textbf{Solution: }Being a polysynthetic language, \textit{Cherokee} has words formed of many morphemes, where the symbols directly represent a syllable, i.e. CV unit. Hence, the vocabulary size can be extremely large due to exponential combinations and permutations of those morphemes. In addition, the word length can also vary a lot. Therefore, it is beneficial to model Cherokee-to-English NMT at the morpheme-level or word-level.}    
+    
+    \part[3] Transliteration is the representation of letters or words in the characters of another alphabet or script based on phonetic similarity. For example, the transliteration of {\cherokeefam Ꮳ⁠Ꮕ⁠Ꮤ⁠Ꮝ⁠Ꭺ} (which translates to "do you know") from Cherokee letters to Latin script is tsanvtasgo. In the Cherokee language, "ts-" is a common prefix in many words, but the Cherokee character {\cherokeefam Ꮳ} is "tsa". Using this example, explain why when modeling our Cherokee-to-English NMT problem at the subword-level, training on transliterated Cherokee text may improve performance over training on original Cherokee characters.(Hint: A prefix is a morpheme.)
+
+	\textcolor{red}{\textbf{Solution: }The transliterated Cherokee words are easier to split into morphemes (subwords) because the original Cherokee characters may contain inseparable combinations of morphemes. For example, many words in Cherokee start with a common prefix ``ts-'', can easily be segregated into subwords, if their transliterated (Latinized) version is used. It would be easier for the tokenizer to manage vocabulary efficiently as there are fewer subwords (morphemes) now.}  
+
+    \part[3] One challenge of training successful NMT models is lack of language data, particularly for resource-scarce languages like Cherokee. One way of addressing this challenge is with multilingual training, where we train our NMT on multiple languages (including Cherokee). You can read more about multilingual training here:\newline \url{https://ai.googleblog.com/2019/10/exploring-massively-multilingual.html}.\newline How does multilingual training  help in improving NMT performance with low-resource languages?
+
+	\textcolor{red}{\textbf{Answer: } Recently, the limits of multilingual NMT have been pushed by training a very large network on 25+ billion sentence pairs, from 100+ languages to and from English. Big multilingual models are trained on many languages and are found to be generalizing well on new languages. This is possible because of the inherent inductive bias of transfer learning which helps to learn the linguistic similarities across linguistic families and thus able to acquire insights into any new language that falls within the such family. }  
+	
+    \part[6] Here we present a series of errors we found in the outputs of our NMT model (which is the same as the one you just trained). For each example of a reference (i.e., `gold') English translation, and NMT (i.e., `model') English translation, please:
+    
+    \begin{enumerate}
+        \item Identify the error in the NMT translation.
+        \item Provide possible reason(s) why the model may have made the error (either due to a specific linguistic construct or a specific model limitation).
+        \item Describe one possible way we might alter the NMT system to fix the observed error. There are more than one possible fixes for an error. For example, it could be tweaking the size of the hidden layers or changing the attention mechanism.
+    \end{enumerate}
+    
+    Below are the translations that you should analyze as described above. Only analyze the underlined error in each sentence. Rest assured that you don't need to know Cherokee to answer these questions. You just need to know English! If, however, you would like additional color on the source sentences, feel free to use a resource like \url{https://www.cherokeedictionary.net/} to look up words.
+
+    \begin{subparts}
+        \subpart[2]
+        \textbf{Source Sentence:} \textit{{\cherokeefam ᏄᏩᏁᎰᎾ ᏕᎪᏣᎳᎩᏍᎬ, ᎯᎠ ᏄᏍᏕ ᏚᏏᎳᏛ: ᏧᏓᎴᏅᏓ ᏕᎪᏒᏍᎦ ᏧᏏᎳᏛᏙᏗ ᎠᏍᏓ ᎧᏅᏂᏍᎩ.        }}\newline
+        \textbf{Reference Translation:} \textit{When \underline{she} was finished ripping things out, \underline{her} web looked something like this: }\newline
+        \textbf{NMT Translation:} \textit{When \underline{it} was gone out of the web, \underline{he} said the web in the web.}
+
+		\textcolor{red}{\textbf{Solution: }
+		\begin{enumerate}
+		\item The NMT model is not able to pick the pronouns correctly for the target sentence in the translation. 
+		\item The most likely reason for the error might be caused by the final softmax output with vocabulary projection. 
+		\item Adding more layers to the final projection layer could be a possible fix. Or, the NMT has not learned the target language grammar well enough. This would be solved by the combination of incorporating more data, running more epochs, adding more layers, and/or increasing the size of hidden layers.		
+		\end{enumerate}
+		}
+		  
+        
+        
+        \subpart[2]
+        \textbf{Source Translation}: \textit{{\cherokeefam ᎤᏍᏗ ᎢᏈᎬᎢ, ᎦᏙᏊᎢ? ᎤᏓᏛᏛᏁᎢ ᎤᏍᏗ ᎠᏧᏣ.}}\newline
+        \textbf{Reference Translation}: \textit{What's wrong \underline{little} tree? the boy asked.}\newline
+        \textbf{NMT Translation}: \textit{ The \underline{little little little little little} tree? asked him.}
+
+		\textcolor{red}{\textbf{Solution: }
+		\begin{enumerate}		
+		\item The NMT model repeatedly predicts the same word multiple times in the translation. 
+		\item The error might be caused by paying overly attention to the same part of the source sentence, leading to a similar probability distribution at each decoding step. 
+		\item The concept of self-attention on the decoder might be useful to overcome the issue. Alternatively, as another solution, more recurrent layers to the encoder can be added to better encode the inter-word relationship present in the source sentence.
+		\end{enumerate}
+		}          
+        
+        \subpart[2] 
+        \textbf{Source Sentence:} \textit{{\cherokeefam “ᎤᏓᎸᏉᏗ ᏂᎨᏒᎾ,” ᎤᏛᏁ ᎰᎻ.}}\newline
+        \textbf{Reference Translation:} \textit{\underline{“ ‘Humble,’ ”} said Mr. Zuckerman}\newline
+        \textbf{NMT Translation:} \textit{\underline{“It’s not a lot,”} said Mr. Zuckerman.}
+        
+
+		\textcolor{red}{\textbf{Solution: }
+		\begin{enumerate}		
+		\item The NMT model got the meaning right but failed to manifest the desired word. 
+		\item The error is likely caused by the model's low memory power or representation capability. 
+		\item One solution could change the architecture, i.e. add more layers to the encoder/decoder, and apply self-attention. Another reason is that possibly the desired word or its representation was not in the training corpus. So adding more data to the training may resolve such errors.
+		\end{enumerate}
+		}          
+		        
+    \end{subparts}
+    
+    \part[4] Now it is time to explore the outputs of the model that you have trained! The test-set translations your model produced in question \texttt{1-i} should be located in \texttt{outputs/test\_outputs.txt}. 
+    \begin{subparts}
+        \subpart[2] Find a line where the predicted translation is correct for a long (4 or 5 word) sequence of words. Check the training target file (English); does the training file contain that string (almost) verbatim? If so or if not, what does this say about what the MT system learned to do?
+
+		\textcolor{red}{\textbf{Solution: }There are many examples where a similar sequence of words present in both the NMT output and the target training file. For example, \textit{``they that were with him''} exists at line no. 28 and 334 in \texttt{outputs/test\_outputs.txt} and also repeats 9 times in the target training file \texttt{chr\_en\_data/train.en}. This shows that the NMT model has memorised some sequences of words while learning a language model on the target training data.}
+        
+        \subpart[2] Find a line where the predicted translation starts off correct for a long (4 or 5 word) sequence of words, but then diverges (where the latter part of the sentence seems totally unrelated). What does this say about the model's decoding behavior?
+        
+        \textcolor{red}{\textbf{Solution: }\\\ Line no. 41 in \texttt{outputs/test\_outputs.txt}  \\      
+        \textit{``And he said unto him, Friend, why do ye that thou art in the temple? And they were healed.''}        
+Line no. 41 in \texttt{chr\_en\_data/test.en}\\     
+        \textit{``and he saith unto him, Friend, how camest thou in hither not having a wedding-garment? And he was speechless.''}\\   
+    In the above translation, we can see that the starting five words are similar; after that, test output diverges completely. It shows the inability of the decoder module to maintain the context after translating a few words. 
+    }
+    \end{subparts}
+    
+    \part[14] BLEU score is the most commonly used automatic evaluation metric for NMT systems. It is usually calculated across the entire test set, but here we will consider BLEU defined for a single example.\footnote{This definition of sentence-level BLEU score matches the \texttt{sentence\_bleu()} function in the \texttt{nltk} Python package. Note that the NLTK function is sensitive to capitalization. In this question, all text is lowercased, so capitalization is irrelevant. \\ \url{http://www.nltk.org/api/nltk.translate.html\#nltk.translate.bleu_score.sentence_bleu}
+    } 
+    Suppose we have a source sentence $\bs$, a set of $k$ reference translations $\br_1,\dots,\br_k$, and a candidate translation $\bc$. To compute the BLEU score of $\bc$, we first compute the \textit{modified $n$-gram precision} $p_n$ of $\bc$, for each of $n=1,2,3,4$, where $n$ is the $n$ in \href{https://en.wikipedia.org/wiki/N-gram}{n-gram}:
+    \begin{align}
+        p_n = \frac{ \displaystyle \sum_{\text{ngram} \in \bc} \min \bigg( \max_{i=1,\dots,k} \text{Count}_{\br_i}(\text{ngram}), \enspace \text{Count}_{\bc}(\text{ngram}) \bigg) }{\displaystyle \sum_{\text{ngram}\in \bc} \text{Count}_{\bc}(\text{ngram})}
+    \end{align}
+     Here, for each of the $n$-grams that appear in the candidate translation $\bc$, we count the maximum number of times it appears in any one reference translation, capped by the number of times it appears in $\bc$ (this is the numerator). We divide this by the number of $n$-grams in $\bc$ (denominator). \newline 
+
+    Next, we compute the \textit{brevity penalty} BP. Let $len(c)$ be the length of $\bc$ and let $len(r)$ be the length of the reference translation that is closest to $len(c)$ (in the case of two equally-close reference translation lengths, choose $len(r)$ as the shorter one). 
+    \begin{align}
+        BP = 
+        \begin{cases}
+            1 & \text{if } len(c) \ge len(r) \\
+            \exp \big( 1 - \frac{len(r)}{len(c)} \big) & \text{otherwise}
+        \end{cases}
+    \end{align}
+    Lastly, the BLEU score for candidate $\bc$ with respect to $\br_1,\dots,\br_k$ is:
+    \begin{align}
+        BLEU = BP \times \exp \Big( \sum_{n=1}^4 \lambda_n \log p_n \Big)
+    \end{align}
+    where $\lambda_1,\lambda_2,\lambda_3,\lambda_4$ are weights that sum to 1. The $\log$ here is natural log.
+    \newline
+    \begin{subparts}
+        \subpart[5] Please consider this example\footnote{Due to data availability, many Cherokee sentences with English reference translations are from the Bible. This example is John 1:5. The two reference translations are from the New International Version and the New King James Version translations of the Bible.}: \newline
+        Source Sentence $\bs$: \textbf{{\cherokeefam ᎠᎴ ᎾᏍᎩ ᎢᎦ-ᎦᏘᏍᏗᏍᎩ ᎤᎵᏏᎬ ᏚᎸᏌᏕᎢ ᎤᎵᏏᎩᏃ ᎥᏝ ᏱᏚᏓᏂᎸᏤᎢ}} 
+        \newline
+        Reference Translation $\br_1$: \textit{the light shines in the darkness and the darkness has not overcome it}
+        \newline
+        Reference Translation $\br_2$: \textit{and the light shines in the darkness and the darkness did not comprehend it}
+        
+        NMT Translation $\bc_1$: and the light shines in the darkness and the darkness can not comprehend
+        
+        NMT Translation $\bc_2$: the light shines the darkness has not in the darkness and the trials
+        
+        Please compute the BLEU scores for $\bc_1$ and $\bc_2$. Let $\lambda_i=0.5$ for $i\in\{1,2\}$ and $\lambda_i=0$ for $i\in\{3,4\}$ (\textbf{this means we ignore 3-grams and 4-grams}, i.e., don't compute $p_3$ or $p_4$). When computing BLEU scores, show your working (i.e., show your computed values for $p_1$, $p_2$, $len(c)$, $len(r)$ and $BP$). Note that the BLEU scores can be expressed between 0 and 1 or between 0 and 100. The code is using the 0 to 100 scale while in this question we are using the \textbf{0 to 1} scale.
+        \newline
+        
+        Which of the two NMT translations is considered the better translation according to the BLEU Score? Do you agree that it is the better translation?
+
+\textcolor{red}{\textbf{Solution: }\\
+\textbf{Step-1: Estimate the modified n-gram precision for each candidate} $\bc$:\\
+We will consider only \textbf{1-gram} and \textbf{2-gram} during the BLEU estimation as 3-gram and 4-gram are ignored.}
+
+
+\textcolor{red}{\textbf{1-grams for candidate and reference sentences}:}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \textbf{1-grams} & and & the & light & shines & in & darkness & can & not & comprehend \\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_1}$ & 2 & 3 & 1 & 1 & 1 & 2 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 3 & 1 & 1 & 1 & 2 & 0 & 1 & 0\\
+ $\text{Count}_{\br_2}$ & 2 & 3 & 1 & 1 & 1 & 2 & 0 & 1 & 1 \\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \textbf{1-grams} & the & light & shines & darkness & has & not & in & and & trials \\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_2}$ & 4 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 1\\ 
+ $\text{Count}_{\br_1}$ & 3 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 0 \\
+ $\text{Count}_{\br_2}$ & 3 & 1 & 1 & 2 & 0 & 1 & 1 & 2 & 0 \\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\textcolor{red}{\textbf{2-grams for candidate and reference sentences}:}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \multirow{2}{*}{\textbf{2-grams}} & and & the & light & shines & in & the & darkness & darkness & can & not \\
+ & the & light & shines & in & the & darkness & and & can & not & comprehend\\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_1}$ & 2 & 1 & 1 & 1 & 1 & 2 & 1 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 1 & 1 & 1 & 1 & 2 & 1 & 0 & 0 & 0\\
+ $\text{Count}_{\br_2}$ & 2 & 1 & 1 & 1 & 1 & 2 & 1 & 0 & 0 & 1\\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \multirow{2}{*}{\textbf{2-grams}} & the & light & shines & the & darkness & has & not & in & darkness & and & the\\
+& light & shines & the & darkness & has & not & in & the & and & the & trials\\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_2}$ & 1 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 1 & 0 & 2 & 1 & 1 & 0 & 1 & 1 & 1 & 0\\
+ $\text{Count}_{\br_2}$ & 1 & 1 & 0 & 2 & 0 & 0 & 0 & 1 & 1 & 2 & 0\\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\textcolor{red}{$p_1$ and $p_2$ can not easily be computed for both $\bc_1$ and $\bc_2$:
+\[
+p_{1,\bc_1} = \frac{2+3+1+1+1+2+0+1+1}{2 + 3 + 1 + 1 + 1 + 2 + 1 + 1 + 1} = \frac{12}{13} \approx 0.9231
+\]
+\[
+p_{1,\bc_2} = \frac{3+1+1+2+1+1+1+1+0}{4 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1} = \frac{11}{13} \approx 0.8462
+\]
+\[
+p_{2,\bc_1} = \frac{2+1+1+1+1+2+1+0+0+1}{2 + 1 + 1 + 1 + 1 + 2 + 1 + 1 + 1 + 1} = \frac{10}{12} \approx 0.8333
+\]
+\[
+p_{2,\bc_2} = \frac{1+1+0+2+1+1+0+1+1+1+0}{1 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1 + 1 + 1} = \frac{9}{12} \approx 0.7500
+\]}
+
+\textcolor{red}{\textbf{Step-2: Estimate the \textit{brevity penalty} (BP) for each candidate} $\bc$:\\
+Compute the length of both candidates and reference sentences:
+\[len(\bc_1) = 13; \;\; len(\bc_2) = 13\]
+\[len(r_1) = 13; \;\; len(r_2) = 14\]
+As $len(r_1)$ is closer to both $len(\bc_1)$ and $len(\bc_2)$, hence:
+\[BP_{\bc_1}=1; \;\; BP_{\bc_2}=1\]}
+\textcolor{red}{\textbf{Step-3: Now, calculate the BLEU score of each candidate} $\bc$:\\
+\[ BLEU_{\bc_1} = BP_{\bc_1} \times \exp \big( \lambda_1 \ln p_{1,\bc_1} + \lambda_2 \ln p_{2,\bc_1} \big) = \exp (0.5 \ln 0.9231 + 0.5 \ln 0.8333) \approx 0.8771 \]
+\[ BLEU_{\bc_2} = BP_{\bc_2} \times \exp \big( \lambda_1 \ln p_{1,\bc_2} + \lambda_2 \ln p_{2,\bc_2} \big)  = \exp (0.5 \ln 0.8462 + 0.5 \ln 0.7500) \approx 0.7966 \]
+Since $BLEU_{\bc_1} > BLEU_{\bc_2}$, candidate $\bc_1$ is the better translation. This is indeed reflected in the translation also as it is more similar to the reference sentences.
+}
+
+
+        \subpart[5] Our hard drive was corrupted and we lost Reference Translation $\br_2$. Please recompute BLEU scores for $\bc_1$ and $\bc_2$, this time with respect to $\br_1$ only. Which of the two NMT translations now receives the higher BLEU score? Do you agree that it is the better translation?
+
+\textcolor{red}{\textbf{Solution: }\\
+\textbf{Step-1: Estimate the modified the n-gram precision for each candidate} $\bc$:\\
+Similar to the previous part, we will consider only \textbf{1-gram} and \textbf{2-gram} during the BLEU estimation as 3-gram and 4-gram are ignored. Additionally, $\br_2$ is also going to be ignored, as mentioned in the question.}
+
+
+\textcolor{red}{\textbf{1-grams for candidates and reference sentence}:}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \textbf{1-grams} & and & the & light & shines & in & darkness & can & not & comprehend \\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_1}$ & 2 & 3 & 1 & 1 & 1 & 2 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 3 & 1 & 1 & 1 & 2 & 0 & 1 & 0\\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \textbf{1-grams} & the & light & shines & darkness & has & not & in & and & trials \\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_2}$ & 4 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 1\\ 
+ $\text{Count}_{\br_1}$ & 3 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 0 \\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\textcolor{red}{\textbf{2-grams for candidate and reference sentences}:}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \multirow{2}{*}{\textbf{2-grams}} & and & the & light & shines & in & the & darkness & darkness & can & not \\
+ & the & light & shines & in & the & darkness & and & can & not & comprehend\\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_1}$ & 2 & 1 & 1 & 1 & 1 & 2 & 1 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 1 & 1 & 1 & 1 & 2 & 1 & 0 & 0 & 0\\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\begin{table}[h!]
+\centering
+{\color{red}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|} 
+ \hline
+ \multirow{2}{*}{\textbf{2-grams}} & the & light & shines & the & darkness & has & not & in & darkness & and & the\\
+& light & shines & the & darkness & has & not & in & the & and & the & trials\\ [0.5ex] 
+ \hline
+ $\text{Count}_{\bc_2}$ & 1 & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 1 & 1 & 1\\  
+ $\text{Count}_{\br_1}$ & 1 & 1 & 0 & 2 & 1 & 1 & 0 & 1 & 1 & 1 & 0\\ [1ex] 
+ \hline
+\end{tabular}}
+\label{table:1}
+\end{table}
+
+\textcolor{red}{$p_1$ and $p_2$ can not easily be computed for both $\bc_1$ and $\bc_2$:
+\[
+p_{1,\bc_1} = \frac{1+3+1+1+1+2+0+1+0}{2 + 3 + 1 + 1 + 1 + 2 + 1 + 1 + 1} = \frac{10}{13} \approx 0.7692
+\]
+\[
+p_{1,\bc_2} = \frac{3+1+1+2+1+1+1+1+0}{4 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1} = \frac{11}{13} \approx 0.8462
+\]
+\[
+p_{2,\bc_1} = \frac{1+1+1+1+1+2+1+0+0+0}{2 + 1 + 1 + 1 + 1 + 2 + 1 + 1 + 1 + 1} = \frac{8}{12} \approx 0.6667
+\]
+\[
+p_{2,\bc_2} = \frac{1+1+0+2+1+1+0+1+1+1+0}{1 + 1 + 1 + 2 + 1 + 1 + 1 + 1 + 1 + 1 + 1} = \frac{9}{12} \approx 0.7500
+\]}
+
+\textcolor{red}{\textbf{Step-2: Estimate the \textit{brevity penalty} (BP) for each candidate} $\bc$:\\
+Compute the length of both candidates and reference sentences:
+\[len(\bc_1) = 13; \;\; len(\bc_2) = 13\]
+\[len(r_1) = 13; \;\; len(r_2) = 14\]
+As $len(r_1)$ is closer to both $len(\bc_1)$ and $len(\bc_2)$, hence:
+\[BP_{\bc_1}=1; \;\; BP_{\bc_2}=1\]}
+\textcolor{red}{\textbf{Step-3: Now, calculate the BLEU score of each candidate} $\bc$:\\
+\[ BLEU_{\bc_1} = BP_{\bc_1} \times \exp \big( \lambda_1 \ln p_{1,\bc_1} + \lambda_2 \ln p_{2,\bc_1} \big) = \exp (0.5 \ln 0.7692 + 0.5 \ln 0.6667) \approx 0.7161 \]
+\[ BLEU_{\bc_2} = BP_{\bc_2} \times \exp \big( \lambda_1 \ln p_{1,\bc_2} + \lambda_2 \ln p_{2,\bc_2} \big)  = \exp (0.5 \ln 0.8462 + 0.5 \ln 0.7500) \approx 0.7966 \]
+Since $BLEU_{\bc_1} < BLEU_{\bc_2}$, candidate $\bc_2$ is the better translation. The reason is that the n-gram overlapping between $\bc_2$,$\br_1$ is more than the $\bc_1$,$\br_1$. Some overlapping n-grams are not judged correctly, i.e. ``\textbf{the darkness} has not in \textbf{the darkness}''. Considering higher n-grams, i.e. 3-gram, 4-gram, could be helpful in solving this problem. Thus, the better score does not justify the translation.
+}
+\vspace{0.5cm}        
+        \subpart[2] Due to data availability, NMT systems are often evaluated with respect to only a single reference translation. Please explain (in a few sentences) why this may be problematic. In your explanation, discuss how the BLEU score metric assesses the quality of NMT translations when there are multiple reference transitions versus a single reference translation.
+\vspace{0.5cm}
+\textcolor{red}{\textbf{Solution: }\\
+Multiple references give a better chance of generalization in evaluating the candidate translations. It leads to obtaining a fair BLEU score. The chances are high that the single reference may be noisy or syntactically different and unable to provide relevant n-grams for estimating the BLEU score. Hence, the BLUE score will also be noisy.}
+
+\newpage
+        
+        \subpart[2] List two advantages and two disadvantages of BLEU, compared to human evaluation, as an evaluation metric for Machine Translation.
+
+\textcolor{red}{\textbf{Solution: }\\
+\textbf{Advantages:}
+\begin{enumerate}
+\item Based on a simple statistical method, it is \textbf{very fast}.
+\item It is also \textbf{language-independent}. Same metric for every language.
+\end{enumerate}
+\textbf{Disadvantages:}
+\begin{enumerate}
+\item It is unable to capture the \textbf{semantics or structure of the sentences}.
+\item \textbf{It may not be cost-effective} as it requires large human resources for annotating and writing reference translations.\end{enumerate}
+}        
+    \end{subparts}
+\end{parts}

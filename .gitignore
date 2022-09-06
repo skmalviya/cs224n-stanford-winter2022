@@ -3,6 +3,10 @@ bin-debug/
 bin-release/
 [Oo]bj/
 [Bb]in/
+data/
+results/
+*.bin
+*.optim
 
 # Other files and folders
 .settings/
